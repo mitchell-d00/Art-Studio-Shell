@@ -1,0 +1,452 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Local Art Studio</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg: #12110f;
+      --bg-2: #1b1916;
+      --panel: #221f1b;
+      --ink: #f3eadc;
+      --muted: #b7ab98;
+      --line: #3a342c;
+      --gold: #d4b483;
+      --gold-2: #f0d7a4;
+      --accent: #c45c26;
+      --good: #7d9a6b;
+      --bad: #c45c4a;
+      --shadow: 0 18px 50px rgba(0,0,0,.45);
+    }
+    * { box-sizing: border-box; }
+    html, body { margin: 0; height: 100%; background: var(--bg); color: var(--ink); font-family: "IBM Plex Sans", system-ui, sans-serif; }
+    body {
+      background:
+        radial-gradient(1200px 600px at 10% -10%, #2a231c 0%, transparent 50%),
+        radial-gradient(900px 500px at 110% 10%, #2c1c16 0%, transparent 45%),
+        var(--bg);
+    }
+    header {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 18px 28px 8px;
+    }
+    .brand { font-family: Fraunces, Georgia, serif; font-weight: 600; letter-spacing: .02em; font-size: 1.35rem; }
+    .brand small { display: block; font-family: "IBM Plex Sans", sans-serif; font-weight: 400; color: var(--muted); font-size: .72rem; letter-spacing: .16em; text-transform: uppercase; margin-top: 2px; }
+    .status { display: flex; gap: 10px; align-items: center; color: var(--muted); font-size: .85rem; }
+    .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--bad); box-shadow: 0 0 0 3px rgba(196,92,74,.15); }
+    .dot.ok { background: var(--good); box-shadow: 0 0 0 3px rgba(125,154,107,.18); }
+    main { display: grid; grid-template-columns: 320px 1fr; gap: 18px; padding: 8px 22px 22px; height: calc(100vh - 72px); }
+    aside, .stage { background: color-mix(in srgb, var(--panel) 88%, black); border: 1px solid var(--line); border-radius: 18px; box-shadow: var(--shadow); }
+    aside { padding: 16px; overflow: auto; display: flex; flex-direction: column; gap: 14px; }
+    label { display: block; font-size: .72rem; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); margin-bottom: 6px; }
+    input, select, textarea, button {
+      font: inherit; color: var(--ink); background: var(--bg-2); border: 1px solid var(--line); border-radius: 10px;
+    }
+    input, select { width: 100%; padding: 9px 10px; }
+    textarea {
+      width: 100%; min-height: 160px; resize: vertical; padding: 12px; line-height: 1.45;
+      font-family: "IBM Plex Mono", ui-monospace, monospace; font-size: .9rem;
+    }
+    .row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+    .chips { display: flex; flex-wrap: wrap; gap: 6px; }
+    .chip {
+      border: 1px solid var(--line); background: transparent; color: var(--muted);
+      padding: 5px 9px; border-radius: 999px; cursor: pointer; font-size: .78rem;
+    }
+    .chip:hover, .chip.on { border-color: var(--gold); color: var(--gold-2); background: #2a241c; }
+    .actions { display: flex; gap: 8px; }
+    button.primary, button.ghost { cursor: pointer; padding: 10px 12px; font-weight: 600; }
+    button.primary { flex: 1; background: linear-gradient(#e0b36a, #c48a3a); color: #1a140c; border: none; }
+    button.primary:disabled { opacity: .5; cursor: wait; }
+    button.ghost { background: transparent; color: var(--muted); }
+    .hint { color: var(--muted); font-size: .78rem; line-height: 1.4; }
+    .stage { padding: 16px; overflow: auto; }
+    .empty {
+      height: 100%; display: grid; place-items: center; text-align: center; color: var(--muted);
+      font-family: Fraunces, serif; font-size: 1.4rem;
+    }
+    .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 14px; }
+    .card {
+      background: #161410; border: 1px solid var(--line); border-radius: 14px; overflow: hidden;
+      position: relative;
+    }
+    .card img { width: 100%; aspect-ratio: 1; object-fit: cover; display: block; cursor: zoom-in; background: #0d0c0a; }
+    .card.pending { min-height: 240px; display: grid; place-items: center; color: var(--muted); }
+    .spin { width: 28px; height: 28px; border: 2px solid var(--line); border-top-color: var(--gold); border-radius: 50%; animation: spin .8s linear infinite; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .meta { padding: 8px 10px 10px; font-size: .75rem; color: var(--muted); display: flex; justify-content: space-between; gap: 8px; }
+    .meta a { color: var(--gold); text-decoration: none; }
+    .meta .name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .meta .right { display: flex; gap: 10px; flex-shrink: 0; }
+    .card img.alpha {
+      background: repeating-conic-gradient(#1f1c18 0% 25%, #2a261f 0% 50%) 50% / 18px 18px;
+    }
+    .card.failed { padding: 14px; min-height: 120px; border-color: #5a3129; }
+    .card.failed strong { display: block; color: var(--bad); margin-bottom: 6px; font-size: .85rem; }
+    .card.failed p { margin: 0 0 10px; color: var(--muted); font-size: .8rem; line-height: 1.45; word-break: break-word; }
+    .card.failed button { cursor: pointer; padding: 5px 10px; font-size: .78rem; background: transparent; color: var(--muted); }
+    .inflight { color: var(--gold-2); }
+    select:disabled { opacity: .45; }
+    :focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
+    @media (prefers-reduced-motion: reduce) { .spin { animation-duration: 2.4s; } }
+    .lightbox {
+      display: none; position: fixed; inset: 0; background: rgba(0,0,0,.82); z-index: 20;
+      place-items: center; padding: 24px;
+    }
+    .lightbox.on { display: grid; }
+    .lightbox img { max-width: min(92vw, 1400px); max-height: 88vh; border-radius: 8px; box-shadow: var(--shadow); }
+    @media (max-width: 900px) {
+      main { grid-template-columns: 1fr; height: auto; }
+      aside { order: 2; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="brand">Local Art Studio <small>shell-launched image toy</small></div>
+    <div class="status"><span class="inflight" id="inflight"></span><span class="dot" id="dot"></span><span id="status">checking…</span></div>
+  </header>
+  <main>
+    <aside>
+      <div>
+        <label for="prompt">Prompt</label>
+        <textarea id="prompt" placeholder="A wabi-sabi still life: cracked celadon bowl, late afternoon window light, dust in the beam, film grain…"></textarea>
+      </div>
+      <div>
+        <label>Style chips</label>
+        <div class="chips" id="chips"></div>
+      </div>
+      <div class="row">
+        <div>
+          <label for="model">Model</label>
+          <select id="model">
+            <option value="gpt-image-1">gpt-image-1</option>
+            <option value="gpt-image-1-mini">gpt-image-1-mini</option>
+            <option value="dall-e-3">dall-e-3</option>
+          </select>
+        </div>
+        <div>
+          <label for="quality">Quality</label>
+          <select id="quality"></select>
+        </div>
+      </div>
+      <div class="row">
+        <div>
+          <label for="size">Size</label>
+          <select id="size"></select>
+        </div>
+        <div>
+          <label for="n">Count</label>
+          <select id="n"></select>
+        </div>
+      </div>
+      <div class="row">
+        <div>
+          <label for="format">Format</label>
+          <select id="format">
+            <option value="png" selected>png</option>
+            <option value="jpeg">jpeg</option>
+            <option value="webp">webp</option>
+          </select>
+        </div>
+        <div>
+          <label for="background">Background</label>
+          <select id="background">
+            <option value="auto" selected>auto</option>
+            <option value="transparent">transparent</option>
+            <option value="opaque">opaque</option>
+          </select>
+        </div>
+      </div>
+      <p class="hint" id="modelHint" hidden></p>
+      <div>
+        <label for="key">API key (memory only)</label>
+        <input id="key" type="password" placeholder="sk-… or leave blank if env is set" />
+      </div>
+      <div class="actions">
+        <button class="primary" id="go">Generate</button>
+        <button class="ghost" id="saveKey" type="button">Store key</button>
+      </div>
+      <p class="hint">Launch with <code>python3 server.py</code>. Images save under <code>outputs/</code>. Key never touches disk. You can start another generation while one is running.</p>
+    </aside>
+    <section class="stage">
+      <div class="empty" id="empty">The wall is blank.<br />Write a prompt and hang some pictures.</div>
+      <div class="grid" id="grid"></div>
+    </section>
+  </main>
+  <div class="lightbox" id="box"><img id="boxImg" alt="" /></div>
+
+  <script>
+    const STYLES = [
+      ["Wabi-sabi", "wabi-sabi, weathered, incomplete beauty, muted earth pigments"],
+      ["Oil atelier", "classical oil painting, visible brushwork, gallery lighting"],
+      ["Ukiyo-e", "Japanese woodblock print, flat color planes, expressive line"],
+      ["Chrome toy", "polished chrome toy photography, studio softbox, shallow depth"],
+      ["Night market", "humid night market, neon signage bloom, cinematic"],
+      ["Pencil study", "graphite figure study on warm paper, construction lines"],
+    ];
+
+    // Mirrors MODEL_RULES in server.py.
+    const MODELS = {
+      "gpt-image": {
+        sizes: ["1024x1024", "1536x1024", "1024x1536", "auto"],
+        qualities: ["low", "medium", "high", "auto"],
+        defaultQuality: "medium",
+        maxN: 4, defaultN: 2,
+        format: true, background: true,
+        hint: "",
+      },
+      "dall-e-3": {
+        sizes: ["1024x1024", "1792x1024", "1024x1792"],
+        qualities: ["standard", "hd"],
+        defaultQuality: "standard",
+        maxN: 1, defaultN: 1,
+        format: false, background: false,
+        hint: "dall-e-3 makes one PNG per request. Format and background don't apply.",
+      },
+    };
+    const rulesFor = m => m.startsWith("dall-e-3") ? MODELS["dall-e-3"] : MODELS["gpt-image"];
+
+    const $ = id => document.getElementById(id);
+    const chips = $("chips"), promptEl = $("prompt"), grid = $("grid"), empty = $("empty");
+    const box = $("box"), boxImg = $("boxImg");
+    const modelEl = $("model"), sizeEl = $("size"), qualityEl = $("quality"), nEl = $("n");
+    const formatEl = $("format"), bgEl = $("background"), modelHint = $("modelHint");
+    let activeStyle = null;
+    let inFlight = 0;
+
+    STYLES.forEach(([name, text]) => {
+      const b = document.createElement("button");
+      b.className = "chip";
+      b.type = "button";
+      b.textContent = name;
+      b.onclick = () => {
+        activeStyle = activeStyle === text ? null : text;
+        [...chips.children].forEach(c => {
+          const on = c === b && !!activeStyle;
+          c.classList.toggle("on", on);
+          c.setAttribute("aria-pressed", on);
+        });
+      };
+      chips.appendChild(b);
+    });
+
+    function fillSelect(el, values, preferred) {
+      const keep = values.includes(el.value) ? el.value : preferred;
+      el.innerHTML = "";
+      values.forEach(v => {
+        const o = document.createElement("option");
+        o.value = o.textContent = String(v);
+        el.appendChild(o);
+      });
+      el.value = String(values.map(String).includes(String(keep)) ? keep : values[0]);
+    }
+
+    function applyModelRules() {
+      const r = rulesFor(modelEl.value);
+      fillSelect(sizeEl, r.sizes, r.sizes[0]);
+      fillSelect(qualityEl, r.qualities, r.defaultQuality);
+      fillSelect(nEl, Array.from({ length: r.maxN }, (_, i) => i + 1), r.defaultN);
+      formatEl.disabled = !r.format;
+      bgEl.disabled = !r.background;
+      modelHint.hidden = !r.hint;
+      modelHint.textContent = r.hint;
+      syncBackground();
+    }
+
+    // Transparent needs png or webp.
+    function syncBackground() {
+      const jpeg = formatEl.value === "jpeg";
+      bgEl.querySelector('option[value="transparent"]').disabled = jpeg;
+      if (jpeg && bgEl.value === "transparent") bgEl.value = "auto";
+    }
+
+    modelEl.onchange = applyModelRules;
+    formatEl.onchange = syncBackground;
+    applyModelRules();
+
+    async function refreshStatus() {
+      const dot = $("dot"), status = $("status");
+      try {
+        const r = await fetch("/api/status");
+        if (!r.ok) throw new Error(r.statusText);
+        const s = await r.json();
+        dot.classList.toggle("ok", s.has_key);
+        status.textContent = s.has_key ? "key ready, " + s.base_url.replace(/^https?:\/\//, "") : "no key";
+      } catch {
+        dot.classList.remove("ok");
+        status.textContent = "server not reachable. Is server.py running?";
+      }
+    }
+    refreshStatus();
+    setInterval(refreshStatus, 15000);
+
+    async function storeKey(value) {
+      const r = await fetch("/api/key", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ key: value }),
+      });
+      if (!r.ok) throw new Error((await r.json().catch(() => ({}))).error || "Couldn't store key.");
+    }
+
+    $("saveKey").onclick = async () => {
+      try { await storeKey($("key").value); $("key").value = ""; }
+      catch (err) { alert(err.message); }
+      refreshStatus();
+    };
+
+    box.onclick = () => box.classList.remove("on");
+    document.addEventListener("keydown", e => { if (e.key === "Escape") box.classList.remove("on"); });
+
+    function setInFlight(delta) {
+      inFlight += delta;
+      $("inflight").textContent = inFlight ? `${inFlight} generating` : "";
+    }
+
+    function showEmptyIfNeeded() {
+      empty.style.display = grid.children.length ? "none" : "grid";
+    }
+
+    function addPending(count) {
+      empty.style.display = "none";
+      const nodes = [];
+      for (let i = 0; i < count; i++) {
+        const card = document.createElement("div");
+        card.className = "card pending";
+        card.innerHTML = '<div class="spin" role="status" aria-label="Generating"></div>';
+        nodes.push(card);
+      }
+      grid.prepend(...nodes);
+      return nodes;
+    }
+
+    function formatUsage(usage, count) {
+      if (!usage || !usage.total_tokens) return "";
+      const each = Math.round(usage.total_tokens / Math.max(count, 1));
+      return count > 1 ? `~${each.toLocaleString()} tok each` : `${each.toLocaleString()} tok`;
+    }
+
+    function fillCard(card, img, usageText, transparent) {
+      card.className = "card";
+      card.innerHTML = "";
+      const picture = document.createElement("img");
+      picture.src = img.src;
+      picture.alt = img.revised_prompt || img.name;
+      if (img.revised_prompt) picture.title = "Revised prompt: " + img.revised_prompt;
+      if (transparent) picture.classList.add("alpha");
+      picture.onclick = () => { boxImg.src = img.src; box.classList.add("on"); };
+
+      const meta = document.createElement("div");
+      meta.className = "meta";
+      const name = document.createElement("span");
+      name.className = "name";
+      name.textContent = img.name;
+      const right = document.createElement("span");
+      right.className = "right";
+      if (usageText) {
+        const u = document.createElement("span");
+        u.textContent = usageText;
+        right.appendChild(u);
+      }
+      const save = document.createElement("a");
+      save.href = img.src;
+      save.download = img.name;
+      save.textContent = "save";
+      right.appendChild(save);
+      meta.append(name, right);
+      card.append(picture, meta);
+    }
+
+    function failCard(card, message, retry) {
+      card.className = "card failed";
+      card.innerHTML = "";
+      const h = document.createElement("strong");
+      h.textContent = "Generation failed";
+      const p = document.createElement("p");
+      p.textContent = message;
+      const actions = document.createElement("div");
+      actions.style.display = "flex";
+      actions.style.gap = "6px";
+      const again = document.createElement("button");
+      again.type = "button";
+      again.textContent = "Try again";
+      again.onclick = () => { card.remove(); showEmptyIfNeeded(); retry(); };
+      const dismiss = document.createElement("button");
+      dismiss.type = "button";
+      dismiss.textContent = "Dismiss";
+      dismiss.onclick = () => { card.remove(); showEmptyIfNeeded(); };
+      actions.append(again, dismiss);
+      card.append(h, p, actions);
+    }
+
+    function currentRequest() {
+      let prompt = promptEl.value.trim();
+      if (activeStyle) prompt = prompt ? `${prompt}\n\nStyle: ${activeStyle}` : `Style: ${activeStyle}`;
+      const r = rulesFor(modelEl.value);
+      const req = {
+        prompt,
+        model: modelEl.value,
+        quality: qualityEl.value,
+        size: sizeEl.value,
+        n: Number(nEl.value),
+      };
+      if (r.format) req.output_format = formatEl.value;
+      if (r.background) req.background = bgEl.value;
+      return req;
+    }
+
+    // Each call owns its own cards, so several can run at once.
+    async function generate(req) {
+      const cards = addPending(req.n);
+      setInFlight(+1);
+      try {
+        const r = await fetch("/api/generate", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(req),
+        });
+        const data = await r.json().catch(() => ({ error: `Server returned ${r.status} with no details.` }));
+        if (!r.ok) throw new Error(data.error || r.statusText);
+
+        const imgs = (data.images || []).filter(i => !i.error);
+        const usageText = formatUsage(data.usage, imgs.length);
+        const transparent = req.background === "transparent";
+        imgs.forEach((img, i) => { if (cards[i]) fillCard(cards[i], img, usageText, transparent); });
+        const failures = (data.images || []).filter(i => i.error);
+        cards.slice(imgs.length).forEach((c, i) => {
+          if (failures[i]) failCard(c, failures[i].error, () => generate(req));
+          else c.remove();
+        });
+      } catch (err) {
+        const msg = err instanceof TypeError ? "Couldn't reach the local server. Is server.py still running?" : err.message;
+        failCard(cards[0], msg, () => generate(req));
+        cards.slice(1).forEach(c => c.remove());
+      } finally {
+        setInFlight(-1);
+        showEmptyIfNeeded();
+      }
+    }
+
+    $("go").onclick = async () => {
+      const keyField = $("key").value.trim();
+      if (keyField) {
+        try { await storeKey(keyField); $("key").value = ""; }
+        catch (err) { alert(err.message); return; }
+        refreshStatus();
+      }
+      const req = currentRequest();
+      if (!req.prompt) { promptEl.focus(); return; }
+      generate(req);
+    };
+
+    promptEl.addEventListener("keydown", (e) => {
+      if ((e.metaKey || e.ctrlKey) && e.key === "Enter") $("go").click();
+    });
+  </script>
+</body>
+</html>
